@@ -23,8 +23,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_dependency 'gtk3'
-  spec.add_dependency 'webkit2-gtk'
-  spec.add_dependency 'yard'
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake'
 end
