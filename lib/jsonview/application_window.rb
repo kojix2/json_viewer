@@ -20,9 +20,6 @@ module JsonView
     def initialize(application, argv)
       super application: application
       set_title 'JsonView'
-      set_icon GdkPixbuf::Pixbuf.new(
-        resource: '/com/github/kojix2/jsonview/ruby.png'
-      )
       argv[0] && open_json(argv[0])
     end
 
@@ -114,7 +111,7 @@ module JsonView
         @treemodel.append(parent).tap do |j|
           j[0] = data.to_s
           j[1] = 1.0 # drate ** level
-          j[2] = 'cyan'
+          j[2] = ''
         end
       else
         level += 1
