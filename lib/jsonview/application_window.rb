@@ -17,12 +17,13 @@ module JsonView
       end
     end
 
-    def initialize(application)
+    def initialize(application, argv)
       super application: application
       set_title 'JsonView'
       set_icon GdkPixbuf::Pixbuf.new(
         resource: '/com/github/kojix2/jsonview/ruby.png'
       )
+      argv[0] && open_json(argv[0])
     end
 
     def on_open_clicked
@@ -36,6 +37,7 @@ module JsonView
       Gtk::FileFilter.new.tap do |f|
         f.name = 'Json'
         f.add_pattern('*.json')
+        f.add_pattern('*.JSON')
         dialog.add_filter f
       end
       Gtk::FileFilter.new.tap do |f|
@@ -57,43 +59,69 @@ module JsonView
       data = File.open(filename) do |file|
         JSON.load(file)
       end
-      @model&.destroy
-      @model = Gtk::TreeStore.new(String, Float)
+      @treemodel&.destroy
+      @treemodel = Gtk::TreeStore.new(String, Float, String)
       create_model(data)
-      treeview.model = @model
+      treeview.model = @treemodel
 
       column = Gtk::TreeViewColumn.new(
         File.basename(filename),
         Gtk::CellRendererText.new,
-        {
-          text: 0,
-          scale: 1
-        }
+        { text: 0, scale: 1, foreground: 2 }
       )
       treeview.append_column(column)
     end
 
-    def create_model(data, parent = nil, size = 1.0)
-      parent ||= @model.append(nil)
+    def create_model(data, parent = nil, level = 0)
+      parent ||= @treemodel.append(nil)
       case data
       when Hash
         data.each do |key, value|
-          i = @model.append(parent)
+          i = @treemodel.append(parent)
           i[0] = key.to_s
-          i[1] = size
-          create_model(value, i, size * 0.9)
+          i[1] = 1.0 # drate ** level
+          create_model(value, i, level + 1)
         end
       when Array
         data.each do |value|
-          i = @model.append(parent)
+          i = @treemodel.append(parent)
           i[0] = ''
-          i[1] = size
-          create_model(value, i, size * 0.9)
+          i[1] = 1.0 # drate ** level
+          create_model(value, i, level + 1)
         end
-      when String, Numeric, Integer
-        @model.append(parent).tap do |j|
+      when String
+        level += 1
+        @treemodel.append(parent).tap do |j|
+          j[0] = data
+          j[1] = 1.0 # drate ** level
+        end
+      when Numeric, Integer
+        level += 1
+        @treemodel.append(parent).tap do |j|
           j[0] = data.to_s
-          j[1] = size * 0.9
+          j[1] = 1.0 # drate ** level
+          j[2] = 'yellow'
+        end
+      when true
+        level += 1
+        @treemodel.append(parent).tap do |j|
+          j[0] = data.to_s
+          j[1] = 1.0 # drate ** level
+          j[2] = 'magenta'
+        end
+      when false
+        level += 1
+        @treemodel.append(parent).tap do |j|
+          j[0] = data.to_s
+          j[1] = 1.0 # drate ** level
+          j[2] = 'cyan'
+        end
+      else
+        level += 1
+        @treemodel.append(parent).tap do |j|
+          j[0] = data.to_s
+          j[1] = 1.0 # drate ** level
+          j[2] = 'lime'
         end
       end
     end

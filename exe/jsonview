@@ -29,7 +29,7 @@ resource = Gio::Resource.load(resource_bin)
 Gio::Resources.register(resource)
 
 app.signal_connect :activate do |application|
-  window = JsonView::ApplicationWindow.new application
+  window = JsonView::ApplicationWindow.new application, ARGV
   window.present
 end
 
