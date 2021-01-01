@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+require 'optparse'
+require 'jsonview'
+require 'fileutils'
+
+opt = OptionParser.new
+opt.program_name = 'JsonViewer'
+opt.version = JsonView::VERSION
+# opt.on('-p', '--port VAL', Integer) { |v| port_num = v }
+opt.parse!(ARGV)
+
+resource_xml = File.expand_path('../resources/gresources.xml', __dir__)
+resource_bin = File.expand_path('../gresource.bin', __dir__)
+
+system('glib-compile-resources',
+       '--target', resource_bin,
+       '--sourcedir', File.dirname(resource_xml),
+       resource_xml)
+
+at_exit do
+  FileUtils.rm_f(resource_bin)
+end
+
+app = JsonView.application
+
+resource = Gio::Resource.load(resource_bin)
+Gio::Resources.register(resource)
+
+app.signal_connect :activate do |application|
+  window = JsonView::ApplicationWindow.new application
+  window.present
+end
+
+app.run
